@@ -2,78 +2,50 @@ package org.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import java.util.List;
+import lombok.NoArgsConstructor;
+import org.example.demo.dto.OrderItemDTO;
 
 @Entity
 @Table(name = "order_item")
 @Data
+@NoArgsConstructor
 public class OrderItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "item_id")
-    private Long itemId;
 
-    @Column(name = "description")
+    @Id
+    @Column(name = "item_no", nullable = false)
+    @NotNull
+    private Long itemNo;
+
+    @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "price")
+    @Column(name = "price", nullable = false)
     private Double price;
 
-    @Column(name = "quantity")
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Transient
-    private double totalPrice;
 
-
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnore
-    @JoinColumn(name = "sales_order_id")
+    @JoinColumn(name = "sales_order_id", referencedColumnName = "order_id")
     private SalesOrder salesOrder;
 
-    public String getDescription() {
-        return description;
+    public OrderItem(OrderItemDTO orderItemDTO) {
+        this.itemNo = orderItemDTO.getItemNo();
+        this.description = orderItemDTO.getDescription();
+        this.price = orderItemDTO.getPrice();
+        this.quantity = orderItemDTO.getQuantity();
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public Double getPrice() {
-        return price;
-    }
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
-    public SalesOrder getSalesOrder() {
-        return salesOrder;
-    }
-    public void setSalesOrder(SalesOrder salesOrder) {
-        this.salesOrder = salesOrder;
-    }
-    public Long getItemId() {
-        return itemId;
-    }
-    public void setItemId(Long itemId) {
-        this.itemId = itemId;
-    }
 
     public double getTotalPrice() {
-        return price * quantity;
+        return (this.price != null && this.quantity != null) ? this.price * this.quantity : 0.0;
     }
 
-
-    public void setTotalPrice(Double totalPrice) {
-        this.price = totalPrice;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setTotalPrice(double v) {
+        this.price = v;
     }
 }

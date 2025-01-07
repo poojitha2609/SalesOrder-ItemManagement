@@ -2,8 +2,8 @@ package org.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.demo.dto.SalesOrderDTO;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -36,56 +36,16 @@ public class SalesOrder {
     @Column(name = "final_amount")
     private Double finalAmount;
 
-    @OneToMany(mappedBy = "salesOrder", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<OrderItem> orderItems = new ArrayList<>();
+   @OneToMany(mappedBy = "salesOrder", cascade = CascadeType.ALL)
+    private List<OrderItem> orderItems;
 
-    public void updateTotalAndFinalAmounts() {
-        this.totalAmount = orderItems.stream()
-                .mapToDouble(item -> item.getPrice() * item.getQuantity())
-                .sum();
-        this.finalAmount = totalAmount - (discount != null ? discount : 0.0);
-    }
 
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
 
-    public Double getDiscount() {
-        return discount;
-    }
-    public void setDiscount(Double discount) {
-        this.discount = discount;
-    }
-    public Double getTotalAmount() {
-        return totalAmount;
-    }
-    public void setTotalAmount(Double totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-    public Double getFinalAmount() {
-        return finalAmount;
-    }
-    public void setFinalAmount(Double finalAmount) {
-        this.finalAmount = finalAmount;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public Date getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(Date orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public String getOrderId() {
-        return String.valueOf(orderId);
+    public SalesOrder(SalesOrderDTO dto) {
+        this.orderId = dto.getOrderId();
+        this.orderDate = dto.getOrderDate();
+        this.customerName = dto.getCustomerName();
+        this.discount = dto.getDiscount();
+        this.orderItems = dto.getOrderItems();
     }
 }

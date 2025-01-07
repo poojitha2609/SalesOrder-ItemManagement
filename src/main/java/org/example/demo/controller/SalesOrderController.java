@@ -1,60 +1,62 @@
 package org.example.demo.controller;
 
+import org.example.demo.dto.SalesOrderDTO;
 import org.example.demo.entity.OrderItem;
 import org.example.demo.entity.SalesOrder;
+import org.example.demo.repository.SalesOrderRepository;
 import org.example.demo.service.SalesOrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/sales-orders")
 public class SalesOrderController {
     private final SalesOrderService salesOrderService;
+    private final SalesOrderRepository salesOrderRepository;
 
-    public SalesOrderController(SalesOrderService salesOrderService) {
+    public SalesOrderController(SalesOrderService salesOrderService, SalesOrderRepository salesOrderRepository) {
         this.salesOrderService = salesOrderService;
+        this.salesOrderRepository = salesOrderRepository;
     }
 
     @PostMapping
-    public ResponseEntity<String> createOrder(@RequestBody SalesOrder salesOrder) {
-        String createdOrder = salesOrderService.createOrder(salesOrder);
-        return ResponseEntity.ok("Order with ID " + salesOrder.getOrderId() + " created successfully.");
+    public ResponseEntity<String> createOrder(@RequestBody SalesOrderDTO salesOrderDTO) {
+            SalesOrder salesOrder = new SalesOrder(salesOrderDTO);
+            String createdOrder = salesOrderService.createOrder(salesOrder);
+            return ResponseEntity.ok(createdOrder);
     }
+
 
     @PostMapping("/{orderId}")
     public ResponseEntity<String> addItemToOrder(@PathVariable Long orderId, @RequestBody OrderItem orderItem) {
         String updatedOrder = salesOrderService.addItemToOrder(orderId, orderItem);
-        System.out.println(orderItem.getItemId());
-        return ResponseEntity.ok("Item added successfully to the sales order with ID "+orderId);
+        return ResponseEntity.ok(updatedOrder);
     }
 
     @DeleteMapping("/{orderId}/{itemId}")
     public ResponseEntity<String> deleteItemWithoutQuantity(
             @PathVariable Long orderId,
-            @PathVariable Long itemId
-    ) {
+            @PathVariable Long itemId) {
         String updatedOrder = salesOrderService.deleteItemFromOrder(orderId, itemId, null);
-        return ResponseEntity.ok("Item with ID " + itemId + " removed from sales order with ID " + orderId);
+        return ResponseEntity.ok(updatedOrder);
     }
 
     @DeleteMapping("/{orderId}/{itemId}/{quantityToRemove}")
     public ResponseEntity<String> deleteItemWithQuantity(
             @PathVariable Long orderId,
             @PathVariable Long itemId,
-            @PathVariable Integer quantityToRemove
-    ) {
+            @PathVariable Integer quantityToRemove) {
         String updatedOrder = salesOrderService.deleteItemFromOrder(orderId, itemId, quantityToRemove);
-        return ResponseEntity.ok("Quantity " + quantityToRemove + " of item with ID " + itemId + " removed from sales order with ID " + orderId);
+        return ResponseEntity.ok(updatedOrder);
     }
 
     @PutMapping("/{orderId}")
     public ResponseEntity<String> applyDiscount(
             @PathVariable Long orderId,
-            @RequestBody Map<String, Double> requestBody
-    ) {
+            @RequestBody Map<String, Double> requestBody) {
         Double discount = requestBody.get("discount");
         if (discount == null || discount < 0) {
             return ResponseEntity.badRequest().body("Invalid discount value provided.");
@@ -69,9 +71,22 @@ public class SalesOrderController {
         return ResponseEntity.ok(salesOrder);
     }
 
+
+    @GetMapping("/{orderId}/items/{itemId}")
+    public String getSalesOrderWithItemDetails(@PathVariable Long orderId, @PathVariable Long itemId) {
+        return salesOrderService.getSalesOrderWithItemDetails(orderId, itemId);
+    }
+
     @DeleteMapping("/{orderId}")
     public ResponseEntity<String> deleteSalesOrder(@PathVariable Long orderId) {
-        salesOrderService.deleteSalesOrder(orderId);
-        return ResponseEntity.ok("Sales order with ID " + orderId + " deleted successfully!");
+        String deleteOrder = salesOrderService.deleteSalesOrder(orderId);
+        return ResponseEntity.ok(deleteOrder);
     }
+
+    @GetMapping("item/{itemNo}")
+    public boolean isItemInOrder(@PathVariable Long itemNo) {
+        return salesOrderRepository.existsByOrderItems_ItemNo(itemNo);
+    }
+
+
 }
